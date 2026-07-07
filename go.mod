@@ -1,6 +1,6 @@
 module github.com/rydzu/ainfra/k8s-top
 
-go 1.26.3
+go 1.26.4
 
 require (
 	go.opentelemetry.io/otel v1.42.0
