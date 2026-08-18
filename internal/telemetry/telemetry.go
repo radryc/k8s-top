@@ -19,7 +19,9 @@ import (
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Config struct {
@@ -49,7 +51,7 @@ func Setup(ctx context.Context, cfg Config) (*Handle, error) {
 		return &Handle{}, nil
 	}
 
-	res := resource.NewWithAttributes("", buildResourceAttributes(cfg)...)
+	res := resource.NewWithAttributes(semconv.SchemaURL, buildResourceAttributes(cfg)...)
 
 	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(cfg.Endpoint)}
 	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(cfg.Endpoint)}
@@ -74,6 +76,7 @@ func Setup(ctx context.Context, cfg Config) (*Handle, error) {
 	}
 
 	traceProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.AlwaysSample())),
 		sdktrace.WithBatcher(traceExporter),
 		sdktrace.WithResource(res),
 	)
@@ -159,7 +162,19 @@ func emitLogRecord(ctx context.Context, scope string, severity apilog.Severity, 
 	record.SetSeverity(severity)
 	record.SetSeverityText(severityText(severity))
 	record.SetBody(apilog.StringValue(message))
+	addTraceSpanAttrs(ctx, &record)
 	logger.Emit(ctx, record)
+}
+
+func addTraceSpanAttrs(ctx context.Context, record *apilog.Record) {
+	spanCtx := trace.SpanContextFromContext(ctx)
+	if !spanCtx.IsValid() {
+		return
+	}
+	record.AddAttributes(
+		apilog.KeyValue{Key: "trace_id", Value: apilog.StringValue(spanCtx.TraceID().String())},
+		apilog.KeyValue{Key: "span_id", Value: apilog.StringValue(spanCtx.SpanID().String())},
+	)
 }
 
 func buildResourceAttributes(cfg Config) []attribute.KeyValue {
