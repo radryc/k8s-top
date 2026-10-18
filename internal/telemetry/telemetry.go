@@ -19,7 +19,6 @@ import (
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -51,7 +50,14 @@ func Setup(ctx context.Context, cfg Config) (*Handle, error) {
 		return &Handle{}, nil
 	}
 
-	res := resource.NewWithAttributes(semconv.SchemaURL, buildResourceAttributes(cfg)...)
+	res, err := resource.New(ctx,
+		resource.WithFromEnv(),
+		resource.WithTelemetrySDK(),
+		resource.WithAttributes(buildResourceAttributes(cfg)...),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("build telemetry resource: %w", err)
+	}
 
 	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(cfg.Endpoint)}
 	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(cfg.Endpoint)}

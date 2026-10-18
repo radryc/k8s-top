@@ -34,10 +34,10 @@ func Load() (Config, error) {
 	}
 
 	cfg := Config{
-		ServiceName:    envFirst("K8S_TOP_OTEL_SERVICE_NAME", "OTEL_SERVICE_NAME"),
+		ServiceName:    envFirst("OTEL_SERVICE_NAME", "K8S_TOP_OTEL_SERVICE_NAME"),
 		ClusterName:    envFirst("K8S_TOP_CLUSTER_NAME", "KUBERNETES_CLUSTER_NAME"),
 		Kubeconfig:     strings.TrimSpace(os.Getenv("K8S_TOP_KUBECONFIG")),
-		OTLPEndpoint:   envFirst("K8S_TOP_OTEL_ENDPOINT", "OTEL_EXPORTER_OTLP_ENDPOINT"),
+		OTLPEndpoint:   envFirst("OTEL_EXPORTER_OTLP_ENDPOINT", "K8S_TOP_OTEL_ENDPOINT"),
 		OTLPInsecure:   true,
 		PollInterval:   defaultPollInterval,
 		MetricInterval: defaultMetricInterval,
@@ -51,7 +51,7 @@ func Load() (Config, error) {
 		cfg.InstanceID = component
 	}
 
-	if value := envFirst("K8S_TOP_OTEL_INSECURE", "OTEL_EXPORTER_OTLP_INSECURE"); value != "" {
+	if value := envFirst("OTEL_EXPORTER_OTLP_INSECURE", "K8S_TOP_OTEL_INSECURE"); value != "" {
 		parsed, err := strconv.ParseBool(value)
 		if err != nil {
 			return Config{}, fmt.Errorf("parse OTLP insecure flag: %w", err)
