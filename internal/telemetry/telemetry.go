@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -46,7 +47,8 @@ var (
 )
 
 func Setup(ctx context.Context, cfg Config) (*Handle, error) {
-	if strings.TrimSpace(cfg.Endpoint) == "" {
+	endpoint := normalizeEndpoint(cfg.Endpoint)
+	if endpoint == "" {
 		return &Handle{}, nil
 	}
 
@@ -59,9 +61,9 @@ func Setup(ctx context.Context, cfg Config) (*Handle, error) {
 		return nil, fmt.Errorf("build telemetry resource: %w", err)
 	}
 
-	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(cfg.Endpoint)}
-	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(cfg.Endpoint)}
-	logOpts := []otlploggrpc.Option{otlploggrpc.WithEndpoint(cfg.Endpoint)}
+	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
+	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(endpoint)}
+	logOpts := []otlploggrpc.Option{otlploggrpc.WithEndpoint(endpoint)}
 	if cfg.Insecure {
 		traceOpts = append(traceOpts, otlptracegrpc.WithInsecure())
 		metricOpts = append(metricOpts, otlpmetricgrpc.WithInsecure())
@@ -181,6 +183,14 @@ func addTraceSpanAttrs(ctx context.Context, record *apilog.Record) {
 		apilog.KeyValue{Key: "trace_id", Value: apilog.StringValue(spanCtx.TraceID().String())},
 		apilog.KeyValue{Key: "span_id", Value: apilog.StringValue(spanCtx.SpanID().String())},
 	)
+}
+
+func normalizeEndpoint(endpoint string) string {
+	endpoint = strings.TrimSpace(endpoint)
+	if parsed, err := url.Parse(endpoint); err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https") {
+		return parsed.Host
+	}
+	return endpoint
 }
 
 func buildResourceAttributes(cfg Config) []attribute.KeyValue {
