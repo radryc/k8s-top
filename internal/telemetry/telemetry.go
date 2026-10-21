@@ -198,10 +198,11 @@ func buildResourceAttributes(cfg Config) []attribute.KeyValue {
 		attribute.String("service.name", cfg.ServiceName),
 		attribute.String("service.version", buildinfo.Version),
 		attribute.String("service.instance.id", cfg.InstanceID),
-		attribute.String("ainfra.component", cfg.Component),
+		attribute.String("guardian.component", cfg.Component),
 	}
 	if cfg.ClusterName != "" {
 		attrs = append(attrs, attribute.String("k8s.cluster.name", cfg.ClusterName))
+		attrs = append(attrs, attribute.String("guardian.cluster", cfg.ClusterName))
 	}
 	if buildinfo.Commit != "" {
 		attrs = append(attrs, attribute.String("vcs.revision", buildinfo.Commit))

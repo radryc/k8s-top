@@ -21,7 +21,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const scope = "ainfra/k8s-top"
+const scope = "k8s.top"
 
 type instruments struct {
 	scrapeExecutions     metricapi.Int64Counter
@@ -58,7 +58,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if telemetryHandle.Enabled() {
-		log.SetOutput(io.MultiWriter(os.Stderr, telemetry.NewStdLogWriter("k8s-top/stdlog")))
+		log.SetOutput(io.MultiWriter(os.Stderr, telemetry.NewStdLogWriter("k8s.top.stdlog")))
 		telemetry.EmitInfo(ctx, scope, "k8s-top telemetry enabled")
 		defer func() {
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -237,7 +237,7 @@ func registerMetrics(state *scrape.Store, clusterName string) (metricapi.Registr
 func runScrape(ctx context.Context, scraper *scrape.Scraper, state *scrape.Store, inst *instruments, clusterName string) error {
 	baseAttrs := clusterAttrs(clusterName)
 	tracer := otel.Tracer(scope)
-	ctx, span := tracer.Start(ctx, "k8s-top.scrape", trace.WithAttributes(baseAttrs...))
+	ctx, span := tracer.Start(ctx, "k8s.top.scrape", trace.WithAttributes(baseAttrs...))
 	defer span.End()
 
 	startedAt := time.Now()
