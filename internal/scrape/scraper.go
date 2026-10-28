@@ -15,19 +15,27 @@ import (
 )
 
 type ContainerSample struct {
-	Namespace   string
-	Pod         string
-	Container   string
-	CPUMilli    int64
-	MemoryBytes int64
+	Namespace         string
+	Pod               string
+	Container         string
+	GuardianPartition string
+	GuardianIntent    string
+	GuardianAsset     string
+	GuardianAssetType string
+	CPUMilli          int64
+	MemoryBytes       int64
 }
 
 type PodSample struct {
-	Namespace      string
-	Pod            string
-	CPUMilli       int64
-	MemoryBytes    int64
-	ContainerCount int
+	Namespace         string
+	Pod               string
+	GuardianPartition string
+	GuardianIntent    string
+	GuardianAsset     string
+	GuardianAssetType string
+	CPUMilli          int64
+	MemoryBytes       int64
+	ContainerCount    int
 }
 
 type Summary struct {
@@ -80,16 +88,27 @@ func (s *Scraper) Collect(ctx context.Context) (Result, error) {
 
 	for _, podMetrics := range list.Items {
 		namespaces[podMetrics.Namespace] = struct{}{}
+		guardianPartition := podMetrics.Labels["guardian.partition"]
+		guardianIntent := podMetrics.Labels["guardian.intent"]
+		guardianAsset := podMetrics.Labels["guardian.asset"]
+		guardianAssetType := podMetrics.Labels["guardian.asset.type"]
+		if guardianAssetType == "" {
+			guardianAssetType = podMetrics.Labels["guardian.type"]
+		}
 
 		podCPU := int64(0)
 		podMemory := int64(0)
 		for _, containerMetrics := range podMetrics.Containers {
 			sample := ContainerSample{
-				Namespace:   podMetrics.Namespace,
-				Pod:         podMetrics.Name,
-				Container:   containerMetrics.Name,
-				CPUMilli:    containerMetrics.Usage.Cpu().MilliValue(),
-				MemoryBytes: containerMetrics.Usage.Memory().Value(),
+				Namespace:         podMetrics.Namespace,
+				Pod:               podMetrics.Name,
+				Container:         containerMetrics.Name,
+				GuardianPartition: guardianPartition,
+				GuardianIntent:    guardianIntent,
+				GuardianAsset:     guardianAsset,
+				GuardianAssetType: guardianAssetType,
+				CPUMilli:          containerMetrics.Usage.Cpu().MilliValue(),
+				MemoryBytes:       containerMetrics.Usage.Memory().Value(),
 			}
 			containerSamples = append(containerSamples, sample)
 			podCPU += sample.CPUMilli
@@ -106,11 +125,15 @@ func (s *Scraper) Collect(ctx context.Context) (Result, error) {
 		}
 
 		podSamples = append(podSamples, PodSample{
-			Namespace:      podMetrics.Namespace,
-			Pod:            podMetrics.Name,
-			CPUMilli:       podCPU,
-			MemoryBytes:    podMemory,
-			ContainerCount: len(podMetrics.Containers),
+			Namespace:         podMetrics.Namespace,
+			Pod:               podMetrics.Name,
+			GuardianPartition: guardianPartition,
+			GuardianIntent:    guardianIntent,
+			GuardianAsset:     guardianAsset,
+			GuardianAssetType: guardianAssetType,
+			CPUMilli:          podCPU,
+			MemoryBytes:       podMemory,
+			ContainerCount:    len(podMetrics.Containers),
 		})
 	}
 

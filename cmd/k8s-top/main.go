@@ -205,6 +205,7 @@ func registerMetrics(state *scrape.Store, clusterName string) (metricapi.Registr
 				attribute.String("k8s.namespace.name", podSample.Namespace),
 				attribute.String("k8s.pod.name", podSample.Pod),
 			)
+			attrs = withGuardianAttrs(attrs, podSample.GuardianPartition, podSample.GuardianIntent, podSample.GuardianAsset, podSample.GuardianAssetType)
 			observer.ObserveInt64(inst.podCPUMilli, podSample.CPUMilli, metricapi.WithAttributes(attrs...))
 			observer.ObserveInt64(inst.podMemoryBytes, podSample.MemoryBytes, metricapi.WithAttributes(attrs...))
 		}
@@ -214,6 +215,7 @@ func registerMetrics(state *scrape.Store, clusterName string) (metricapi.Registr
 				attribute.String("k8s.pod.name", containerSample.Pod),
 				attribute.String("k8s.container.name", containerSample.Container),
 			)
+			attrs = withGuardianAttrs(attrs, containerSample.GuardianPartition, containerSample.GuardianIntent, containerSample.GuardianAsset, containerSample.GuardianAssetType)
 			observer.ObserveInt64(inst.containerCPUMilli, containerSample.CPUMilli, metricapi.WithAttributes(attrs...))
 			observer.ObserveInt64(inst.containerMemoryBytes, containerSample.MemoryBytes, metricapi.WithAttributes(attrs...))
 		}
@@ -306,6 +308,22 @@ func withAttrs(base []attribute.KeyValue, extra ...attribute.KeyValue) []attribu
 	attrs = append(attrs, base...)
 	attrs = append(attrs, extra...)
 	return attrs
+}
+
+func withGuardianAttrs(base []attribute.KeyValue, partition, intent, asset, assetType string) []attribute.KeyValue {
+	if partition != "" {
+		base = append(base, attribute.String("guardian.target.partition", partition))
+	}
+	if intent != "" {
+		base = append(base, attribute.String("guardian.target.intent", intent))
+	}
+	if asset != "" {
+		base = append(base, attribute.String("guardian.target.asset", asset))
+	}
+	if assetType != "" {
+		base = append(base, attribute.String("guardian.target.asset.type", assetType))
+	}
+	return base
 }
 
 func formatContainerSample(sample *scrape.ContainerSample, formatter func(*scrape.ContainerSample) string) string {

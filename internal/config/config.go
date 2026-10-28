@@ -12,7 +12,7 @@ import (
 const (
 	defaultPollInterval   = 15 * time.Second
 	defaultMetricInterval = 15 * time.Second
-	defaultServiceName    = "k8s-top"
+	defaultServiceName    = "k8s-top.k8s-top.k8s-top"
 )
 
 type Config struct {
