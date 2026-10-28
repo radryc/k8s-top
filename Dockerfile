@@ -20,7 +20,7 @@ COPY . ./
 # same flag set as the top-level build; passing -trimpath only on the command
 # line triggers a linker "fingerprint mismatch" for otelc/pkg/runtime.
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOFLAGS=-trimpath otelc go build \
-	-ldflags "-s -w -X github.com/rydzu/ainfra/k8s-top/internal/buildinfo.Version=${BUILD_VERSION} -X github.com/rydzu/ainfra/k8s-top/internal/buildinfo.Commit=${BUILD_COMMIT} -X github.com/rydzu/ainfra/k8s-top/internal/buildinfo.BuildTime=${BUILD_TIME}" \
+	-ldflags "-s -w -X github.com/radryc/k8s-top/internal/buildinfo.Version=${BUILD_VERSION} -X github.com/radryc/k8s-top/internal/buildinfo.Commit=${BUILD_COMMIT} -X github.com/radryc/k8s-top/internal/buildinfo.BuildTime=${BUILD_TIME}" \
 	-o /out/k8s-top ./cmd/k8s-top
 
 FROM gcr.io/distroless/base-debian12

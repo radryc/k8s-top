@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rydzu/ainfra/k8s-top/internal/buildinfo"
+	"github.com/radryc/k8s-top/internal/buildinfo"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"

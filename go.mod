@@ -1,4 +1,4 @@
-module github.com/rydzu/ainfra/k8s-top
+module github.com/radryc/k8s-top
 
 go 1.26.4
 
