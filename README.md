@@ -86,7 +86,7 @@ The OTel `resource` is built from the environment and SDK defaults plus:
 | `service.instance.id` | `HOSTNAME`, else binary name |
 | `guardian.component` | binary name (`k8s-top`) |
 | `k8s.cluster.name`, `guardian.cluster` | cluster name, when set |
-| `vcs.revision` | build commit, when set |
+| `vcs.revision` | build commit (`unknown` when no commit was injected) |
 
 `OTEL_RESOURCE_ATTRIBUTES` is honored, so additional resource-level identity labels
 can be supplied by the deployment.
@@ -135,6 +135,16 @@ docker build \
   --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
   -t k8s-top .
 ```
+
+The container uses `otelc` instrumentation: the Dockerfile installs
+`go.opentelemetry.io/otelc/tool/cmd/otelc` and builds with
+`otelc go build` (keeping `-trimpath` in `GOFLAGS`). A plain `go build` produces
+a working binary without the instrumentation layer; use the Dockerfile when you
+need the exact production artifact. The image build requires network access to
+fetch `otelc` and Go modules.
+
+The process performs an initial synchronous scrape before starting the poll
+ticker, so the first metric interval may already have data.
 
 Local run against a kubeconfig, exporting to a local collector:
 
